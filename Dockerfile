@@ -1,23 +1,15 @@
-# Use an official Python image as the base image
 FROM python:3.10-slim
 
-# Install OpenSSH server and other dependencies
-RUN apt-get update && apt-get install -y \
-    openssh-server \
+RUN apt-get update \
+    && apt-get install -y openssh-server net-tools iproute2 nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Create the SSH directory and set up an SSH user
 RUN mkdir /var/run/sshd
+RUN ssh-keygen -A
 
-# Set up a user with passwordless sudo
-RUN useradd -m -s /bin/bash user 
-RUN echo 'user:password' | chpasswd
+RUN echo 'root:password' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-# Allow the user to login via SSH (optional: you can adjust according to your need)
-RUN echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+EXPOSE 22
 
-
-EXPOSE 2222
-
-# Start the SSH service and the default command will run python interpreter
 CMD ["/usr/sbin/sshd", "-D"]
